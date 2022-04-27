@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div id="app"></div>
+<script>
+    (function () {
+        let model = {
+            data: { x: 0, y: 0,  res: 0 },
+            init() {
+                for(let key in this.data) {
+                    if (this.data.hasOwnProperty(key)) {
+                        Object.defineProperty(this, key, {
+                            get() {
+                                return this.data[key];
+                            },
+                            set(newVal) {
+                                // 2. 每次设置驱动view层进行渲染页面
+                                this.data[key] = newVal;
+                                view.render({[key] : newVal});
+                            }
+                        })
+                    }
+                }
+            }
+        };
+        let view = {
+            template: `
+                <span class="val-x">{{ x }}</span>
+                <span>+</span>
+                <span class="val-y">{{ y }}</span>
+                <span>=</span>
+                <span class="val-res">{{ res }}</span>
+                <div>
+                    <input class="inp x"  placeholder="x:value">
+                    <input class="inp y"  placeholder="y:value">
+                </div>
+            `,
+            render(modifyVal) {
+                // 第一次渲染情况
+                if (!modifyVal) {
+                    let dom = document.createElement('div');
+                    // 替换模板
+                    this.template = this.template.replace(/\{\{(.*?)\}\}/g, (node, key) => {
+                        return model[key.trim()]
+                    })
+                    dom.innerHTML = this.template;
+                    document.getElementById('app').append(dom);
+                } else {
+                    for (let key in modifyVal) {
+                        // 修改模板的时候只修改显示, 结果数据通过c层的input改变事件进行操作
+                       document.querySelector('.val-' + key).textContent = modifyVal[key]
+                    }
+                }
+            }
+        };
+        let controller = {
+            init() {
+                let inputs = document.querySelectorAll('.inp');
+                for (let i = 0; i < inputs.length; i++) {
+                    inputs[i].addEventListener('input', this.handleInput, false)
+                }
+            },
+            handleInput(e) {
+                let tar = e.target,
+                    field = tar.className.split(' ')[1];
+                // 修改模型层数据驱动视图层改变
+                model[field] = Number(tar.value);
+
+                // 修改计算结果
+                with(model) {
+                    res = eval('x + y');
+                }
+            }
+
+        };
+
+        init();
+        function init() {
+            // 1.数据层进行数据劫持, 优先处理数据
+            model.init();
+            // 初始化视图层
+            view.render();
+            // 初始化控制层绑定数据
+            controller.init();
+        }
+    })();
+
+    /*
+    *  Model: data (x, y res)  观察data变化  ->  更新View视图
+    *  View:  存储模板信息并且渲染和修改视图
+    *  Controller: 通过事件去修改Model层的data
+    *
+    *  流程:
+    *   controller触发输入事件 -> 修改model数据 -> 导致view层改变
+    *   view视图改变 -> 触发controller输入事件 -> 修改model层数据
+    *
+    * */
+
+
+    // 驱动流程 - 自己的设计方案来写 驱动被MVC分离成了是三个部分(  )
+</script>
+</body>
+</html>
