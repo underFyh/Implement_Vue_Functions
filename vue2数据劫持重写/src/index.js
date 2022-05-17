@@ -1,4 +1,4 @@
-import { initState } from "./initState";
+import {initState} from "./initState";
 
 function Vue(options) {
     this._init(options);
@@ -11,3 +11,16 @@ Vue.prototype._init = function (options) {
 
     initState(vm);
 }
+
+
+let vm = new Vue({
+    data() {
+        return {
+            arr: ['a', {b: 2}]
+        }
+    }
+})
+
+
+
+console.log(vm);

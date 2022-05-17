@@ -1,3 +1,5 @@
+import { observe } from "./observe";
+
 // 初始化数据功能
 function initState(vm) {
     let options = vm.$options;
@@ -19,8 +21,12 @@ function initData(vm) {
     for (let key in data) {
         proxyData(vm, '_data', key);
     }
+
+    // 观察者对data进行观察 并且对内部的数据也要进行观察, 如果是数组的情况则要进行数组方法拦截
+    observe(vm._data);
 }
 
+// 代理data数据访问
 function proxyData(vm, target, key) {
     Object.defineProperty(vm, key, {
         get() {
